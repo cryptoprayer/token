@@ -4,9 +4,8 @@ import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import 'zeppelin-solidity/contracts/math/SafeMath.sol';
 import 'zeppelin-solidity/contracts/token/ERC20/MintableToken.sol';
 
-// TODO: price of the transaction
-
 contract Airdrop is Ownable {
+
   using SafeMath for uint256;
   // The token being sold
   MintableToken public token;
@@ -47,11 +46,11 @@ contract Airdrop is Ownable {
 }
 
 contract CappedAirdrop is Airdrop {
+
   uint256 public cap;
 
   function CappedAirdrop(uint256 _startTime, uint256 _endTime, MintableToken _token, uint256 _cap) public 
-    Airdrop(_startTime, _endTime, _token)
-  {
+    Airdrop(_startTime, _endTime, _token) {
     require(_cap > 0);
     cap = _cap;
   }
