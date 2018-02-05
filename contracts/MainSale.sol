@@ -142,12 +142,15 @@ contract CappedCrowdsale is Crowdsale {
  */
 contract MainSale is CappedCrowdsale, Pausable {
 
+ uint256 public minEthAmount = 100 finney; // 0.1 ether
+
   function MainSale(uint256 _startTime, uint256 _endTime, uint256 _rate, uint256 _cap, address _wallet, MintableToken _token) public
     CappedCrowdsale(_cap)
     Crowdsale(_startTime, _endTime, _rate, _wallet, _token) {
   }
 
   function buyTokens(address _beneficiary) public payable whenNotPaused {
+    require (msg.value >= minEthAmount);
     super.buyTokens(_beneficiary);
   }
 
