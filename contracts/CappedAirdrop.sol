@@ -14,6 +14,8 @@ contract Airdrop is Ownable {
   // start and end timestamps where investments are allowed (both inclusive)
   uint256 public startTime;
   uint256 public endTime;
+
+  // total number of tokens minted by airdrop
   uint256 public tokensSent;
 
   function Airdrop(uint256 _startTime, uint256 _endTime, MintableToken _token) public {
@@ -25,13 +27,13 @@ contract Airdrop is Ownable {
     token = _token;
   }
 
-  function multisend(address[] dests, uint256[] values) public onlyOwner
+  function multisend(address[] _dests, uint256 _tokens) public onlyOwner
     returns (uint256) {
     uint256 i = 0;
-    while (i < dests.length) {
-      require(validPurchase(values[i]));
-      token.mint(dests[i], values[i]);
-      tokensSent = tokensSent.add(values[i]);
+    while (i < _dests.length) {
+      require(validPurchase(_tokens));
+      token.mint(_dests[i], _tokens);
+      tokensSent = tokensSent.add(_tokens);
       i += 1;
     }
     return(i);
