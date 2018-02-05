@@ -16,11 +16,11 @@ contract PrayToken is CappedToken, Pausable {
   function PrayToken(uint256 _cap) CappedToken(_cap) public {
   }
 
-  function transfer(address _to, uint _value) whenNotPaused returns (bool) {
+  function transfer(address _to, uint _value) public whenNotPaused returns (bool) {
     return super.transfer(_to, _value);
   }
 
-  function transferFrom(address _from, address _to, uint _value) whenNotPaused returns (bool) {
+  function transferFrom(address _from, address _to, uint _value) public whenNotPaused returns (bool) {
     return super.transferFrom(_from, _to, _value);
   }
 }
