@@ -147,9 +147,9 @@ contract CappedCrowdsale is Crowdsale {
  * After adding multiple features it's good practice to run integration tests
  * to ensure that subcontracts works together as intended.
  */
-contract Presale is CappedCrowdsale {
+contract MainSale is CappedCrowdsale {
 
-  function Presale(uint256 _startTime, uint256 _endTime, uint256 _rate, uint256 _cap, address _wallet, MintableToken _token) public
+  function MainSale(uint256 _startTime, uint256 _endTime, uint256 _rate, uint256 _cap, address _wallet, MintableToken _token) public
     CappedCrowdsale(_cap)
     Crowdsale(_startTime, _endTime, _rate, _wallet, _token)
   {
