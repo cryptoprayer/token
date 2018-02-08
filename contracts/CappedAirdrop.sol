@@ -48,15 +48,24 @@ contract Airdrop is Ownable {
 contract CappedAirdrop is Airdrop {
 
   uint256 public cap;
+  address public owner;
+
 
   function CappedAirdrop(uint256 _startTime, uint256 _endTime, MintableToken _token, uint256 _cap) public 
     Airdrop(_startTime, _endTime, _token) {
     require(_cap > 0);
     cap = _cap;
+    owner = msg.sender;
   }
 
   function validPurchase(uint256 _tokens) internal view returns (bool) {
     bool withinCap = tokensSent.add(tokensSent) <= cap;
     return withinCap && super.validPurchase(_tokens);
+  }
+
+  function transferTokenOwnership() public {
+    require(msg.sender == owner); // Only the owner of the crowdsale contract should be able to call this function.
+    require(owner != address(0));
+    token.transferOwnership(owner);
   }
 }

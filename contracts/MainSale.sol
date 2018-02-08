@@ -143,10 +143,13 @@ contract CappedCrowdsale is Crowdsale {
 contract MainSale is CappedCrowdsale, Pausable {
 
  uint256 public minEthAmount = 100 finney; // 0.1 ether
+ address public owner;
 
   function MainSale(uint256 _startTime, uint256 _endTime, uint256 _rate, uint256 _cap, address _wallet, MintableToken _token) public
     CappedCrowdsale(_cap)
     Crowdsale(_startTime, _endTime, _rate, _wallet, _token) {
+    owner = msg.sender;
+
   }
 
   function buyTokens(address _beneficiary) public payable whenNotPaused {
@@ -154,4 +157,9 @@ contract MainSale is CappedCrowdsale, Pausable {
     super.buyTokens(_beneficiary);
   }
 
+  function transferTokenOwnership() public {
+    require(msg.sender == owner); // Only the owner of the crowdsale contract should be able to call this function.
+    require(owner != address(0));
+    token.transferOwnership(owner);
+  }
 }
