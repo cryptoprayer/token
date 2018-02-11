@@ -2,12 +2,12 @@
   "name": "cryptoprayer",
   "version": "0.0.1",
   "description": "",
-  "main": "truffle-config.js",
+  "main": "truffle.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "scripts/test.sh"
   },
   "author": "cryptoprayer",
   "license": "MIT",

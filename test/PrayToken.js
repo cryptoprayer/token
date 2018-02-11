@@ -1,6 +1,6 @@
 const PrayToken = artifacts.require('./PrayToken.sol')
 
-contract('FundRaise', function ([owner, owner2]) {
+contract('PrayToken', function ([owner, owner2]) {
   let token
 
   beforeEach('setup contract for each test', async function () {
