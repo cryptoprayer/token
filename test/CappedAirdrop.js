@@ -49,6 +49,13 @@ contract('CappedAirdrop', function ([owner, owner2, owner3]) {
     await expectThrow(drop.multisend([owner2], 1*10**18));
   })
 
+  it('increases tokensSent', async function () {
+    await token.transferOwnership(drop.address);
+    await increaseTimeTo(latestTime() + duration.weeks(2));
+    await drop.multisend([owner2], 2*10**18);
+    assert.equal((await drop.tokensSent()).toNumber(), 2*10**18);
+  })
+
   it('cannot mint more than 5 tokens', async function () {
     await token.transferOwnership(drop.address);
     await increaseTimeTo(latestTime() + duration.weeks(2));
