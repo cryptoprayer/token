@@ -108,6 +108,147 @@ contract Crowdsale {
 
 
 /**
+ * @title RefundVault
+ * @dev This contract is used for storing funds while a crowdsale
+ * is in progress. Supports refunding the money if crowdsale fails,
+ * and forwarding it if crowdsale is successful.
+ */
+contract RefundVault is Ownable {
+  using SafeMath for uint256;
+
+  enum State { Active, Closed }
+
+  mapping (address => uint256) public deposited;
+  mapping (uint256 => address) public depositedIndex;
+  uint256 depositedCount;
+
+  address public wallet;
+  State public state;
+
+  event Closed();
+  event Refunded(address indexed beneficiary, uint256 weiAmount);
+
+  function RefundVault(address _wallet) public {
+    require(_wallet != address(0));
+    wallet = _wallet;
+    state = State.Active;
+  }
+
+  function deposit(address _investor) onlyOwner public payable {
+    require(state == State.Active);
+    deposited[_investor] = deposited[_investor].add(msg.value);
+    depositedIndex[depositedCount] = _investor;
+    depositedCount = depositedCount + 1;
+  }
+
+  function close() onlyOwner public {
+    require(state == State.Active);
+    state = State.Closed;
+    Closed();
+    wallet.transfer(this.balance);
+  }
+
+  function refundAll() public {
+    require(state == State.Active);
+    uint256 depositedValue;
+    address investor;
+
+    for(uint256 i = 0; i < depositedCount; i++) {
+      investor = depositedIndex[i];
+      depositedValue = deposited[investor];
+      if(deposited[investor] > 0) {
+        deposited[investor] = 0;
+        investor.transfer(depositedValue);
+        Refunded(investor, depositedValue);
+      }
+    }
+
+    state = State.Closed;
+    Closed();
+  }
+}
+
+/**
+ * @title FinalizableCrowdsale
+ * @dev Extension of Crowdsale where an owner can do extra work
+ * after finishing.
+ */
+contract FinalizableCrowdsale is Crowdsale, Ownable {
+  using SafeMath for uint256;
+
+  bool public isFinalized = false;
+
+  event Finalized();
+
+  /**
+   * @dev Must be called after crowdsale ends, to do some extra finalization
+   * work. Calls the contract's finalization function.
+   */
+  function finalize() onlyOwner public {
+    require(!isFinalized);
+    require(hasEnded());
+
+    finalization();
+    Finalized();
+
+    isFinalized = true;
+  }
+
+  /**
+   * @dev Can be overridden to add finalization logic. The overriding function
+   * should call super.finalization() to ensure the chain of finalization is
+   * executed entirely.
+   */
+  function finalization() internal {
+  }
+}
+
+/**
+ * @title RefundableCrowdsale
+ * @dev Extension of Crowdsale contract that adds a funding goal, and
+ * the possibility of users getting a refund if goal is not met.
+ * Uses a RefundVault as the crowdsale's vault.
+ */
+contract RefundableCrowdsale is FinalizableCrowdsale {
+  using SafeMath for uint256;
+
+  // minimum amount of funds to be raised in weis
+  uint256 public goal;
+
+  // refund vault used to hold funds while crowdsale is running
+  RefundVault public vault;
+
+  function RefundableCrowdsale(uint256 _goal) public {
+    require(_goal > 0);
+    vault = new RefundVault(wallet);
+    goal = _goal;
+  }
+
+  function goalReached() public view returns (bool) {
+    return weiRaised >= goal;
+  }
+
+  // vault finalization task, called when owner calls finalize()
+  function finalization() internal {
+    if (goalReached()) {
+      vault.close();
+    } else {
+      vault.refundAll();
+    }
+
+    super.finalization();
+  }
+
+  // We're overriding the fund forwarding from Crowdsale.
+  // In addition to sending the funds, we want to call
+  // the RefundVault deposit function
+  function forwardFunds() internal {
+    vault.deposit.value(msg.value)(msg.sender);
+  }
+
+}
+
+/**
  * @title CappedCrowdsale
  * @dev Extension of Crowdsale with a max amount of funds raised
  */
@@ -140,16 +281,14 @@ contract CappedCrowdsale is Crowdsale {
 /**
  * @title MainSale
  */
-contract MainSale is CappedCrowdsale, Pausable {
+contract MainSale is CappedCrowdsale, RefundableCrowdsale, Pausable {
 
  uint256 public minEthAmount = 100 finney; // 0.1 ether
- address public owner;
 
-  function MainSale(uint256 _startTime, uint256 _endTime, uint256 _rate, uint256 _cap, address _wallet, MintableToken _token) public
+  function MainSale(uint256 _startTime, uint256 _endTime, uint256 _rate, uint256 _goal, uint256 _cap, address _wallet, MintableToken _token) public
     CappedCrowdsale(_cap)
+    RefundableCrowdsale(_goal)
     Crowdsale(_startTime, _endTime, _rate, _wallet, _token) {
-    owner = msg.sender;
-
   }
 
   function buyTokens(address _beneficiary) public payable whenNotPaused {
