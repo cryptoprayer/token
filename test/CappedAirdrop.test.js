@@ -66,7 +66,7 @@ contract('CappedAirdrop', function ([owner, owner2, owner3]) {
   it('can transfer ownership back', async function () {
     await token.transferOwnership(drop.address);
     assert.equal(await token.owner(), drop.address);
-    await await drop.transferTokenOwnership();
+    await drop.transferTokenOwnership();
     assert.equal(await token.owner(), owner);
   })
 })
